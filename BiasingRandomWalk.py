@@ -11,9 +11,9 @@ from scipy import stats
 from scipy.stats import norm
 
 # define variables
-nwalkers = 100000
+nwalkers = 1000
 ndims = 2
-nsteps = 100
+nsteps = 1000
 finalpos = np.zeros([nwalkers,ndims]) # stores final positions of walkers
 stepweights = [2,1,2,1] # stores weights of possible steps
 steps = [[1,0],[-1,0],[0,1],[0,-1]] # stores possible steps
