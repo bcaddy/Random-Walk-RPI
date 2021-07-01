@@ -1,6 +1,6 @@
 # Files specific to this repo #
 ##############################
-
+*.csv
 
 # Compiled source #
 ###################
@@ -16,6 +16,7 @@ a.out
 *.dSYM
 *.gch
 __pycache__
+doxygen-html
 
 # Packages & Archives#
 ######################
