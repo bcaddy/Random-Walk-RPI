@@ -36,7 +36,8 @@ namespace utils
  * \param yPos The vector of y-positions
  */
 void saveState(stdVector1D const &xPos,
-               stdVector1D const &yPos)
+               stdVector1D const &yPos,
+               std::string savePath)
 {
     // Make sure the vectors are the same size
     if (xPos.size() != yPos.size())
@@ -49,8 +50,8 @@ void saveState(stdVector1D const &xPos,
 
     // Open the savefile
     std::ofstream saveFile;
-    saveFile.open("../output/walkerFinalPositions.csv");
-
+    saveFile.open(savePath.append("/walkerFinalPositions.csv"));
+    
     // Check that the save file opened
     if (saveFile.is_open())
     {
@@ -67,7 +68,8 @@ void saveState(stdVector1D const &xPos,
     }
     else
     {
-        throw std::runtime_error("Savefile failed to open. Exiting.");
+        perror("Savefile failed to open");
+        throw std::runtime_error("Exiting.");
     }
 
     // Close the save file
