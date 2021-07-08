@@ -14,6 +14,9 @@ class World: # just a dummy class for debugging and testing
 myWorld = World(np.zeros([2,3,4])) # create dummy object for testing
 
 def seedReceptors(world, numReceptors, receptorSize):
+    # function to return an array of ints with ones indicating the position of receptors and zeroes everywhere else
+
+    
     worldDim = np.shape(myWorld.board) # stores dimensions of board
     receptorArray = np.zeros(worldDim, dtype=np.int8) # initializes empty position matrix
 
