@@ -1,6 +1,8 @@
 # Files specific to this repo #
 ##############################
 *.csv
+test.cpp
+.ipynb_checkpoints*
 
 # Compiled source #
 ###################

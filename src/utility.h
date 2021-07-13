@@ -8,6 +8,7 @@
  * \copyright Copyright (c) 2021
  *
  */
+#pragma once
 
 #include <vector>
 #include <fstream>
@@ -28,43 +29,82 @@ using stdVector3D = std::vector<std::vector<std::vector<double>>>;
 namespace utils
 {
 // =============================================================================
-/*!
- * \brief Save two one dimensional vectors to a csv file. Each vector is one
- * column and the header is "xPosition, yPosition"
- *
- * \param xPos The vector of x-positions
- * \param yPos The vector of y-positions
- */
-void saveState(stdVector1D const &xPos,
-               stdVector1D const &yPos,
-               std::string savePath)
+inline void save3DVector(std::vector<std::vector<std::vector<int>>> const &data,
+                         std::string savePath,
+                         std::string const &walkerType)
 {
-    // Make sure the vectors are the same size
-    if (xPos.size() != yPos.size())
-    {
-        throw std::runtime_error("Different vector sizes in utils::saveState");
-    }
-
-    // Set header name
-    const std::string header="xPosition, yPosition";
-
     // Open the savefile
     std::ofstream saveFile;
-    std::string fullName =  savePath.append("/walkerFinalPositions.csv");
+    std::string fullName =  savePath.append(walkerType);
     saveFile.open(fullName);
 
     // Check that the save file opened
     if (saveFile.is_open())
     {
         // write the header
-        saveFile << header << std::endl;
+        for (size_t i = 0; i < data.size(); i++)
+        {
+            saveFile << "X" + std::to_string(i) + ", Y" + std::to_string(i) + ", ";
+        }
+
+        saveFile << std::endl;
 
         // write to the save file
         for (size_t i = 0;
-             i < xPos.size();
+             i < data.size();
              i++)
         {
-            saveFile << xPos[i] << ", " << yPos[i] << std::endl;
+            for (size_t j = 0; j < data[i].size(); j++)
+            {
+                for (size_t k = 0; k < data[i][j].size(); k++)
+                {
+                    saveFile << data[i][j][k] << ", ";
+                }
+            }
+            saveFile << std::endl;
+        }
+    }
+    else
+    {
+        perror("Savefile failed to open");
+        throw std::runtime_error("Exiting.");
+    }
+
+    // Close the save file
+    saveFile.close();
+}
+// =============================================================================
+
+// =============================================================================
+inline void save2DVector(std::vector<std::vector<bool>> const &data,
+                         std::string savePath)
+{
+    // Open the savefile
+    std::ofstream saveFile;
+    std::string fullName =  savePath.append("/portalArrangement.csv");
+    saveFile.open(fullName);
+
+    // Check that the save file opened
+    if (saveFile.is_open())
+    {
+        // write the header
+        for (size_t i = 0; i < data.size(); i++)
+        {
+            saveFile << "X" + std::to_string(i) + ", Y" + std::to_string(i) + ", ";
+        }
+
+        saveFile << std::endl;
+
+        // write to the save file
+        for (size_t i = 0;
+             i < data.size();
+             i++)
+        {
+            for (size_t j = 0; j < data[i].size(); j++)
+            {
+                saveFile << data[i][j] << ", ";
+            }
+            saveFile << std::endl;
         }
     }
     else
