@@ -1,22 +1,24 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import pylab
 import math
 import Receptors
 rng=np.random.default_rng()
 
 #Random Walk Control Parameters
 dim=2
-mu=0.237614141414 #"Chemical Potential"
-nantag=200    #number of walker antagonists
+mu=0.014862391#"Chemical Potential"
+nantag=1000   #number of walker antagonists
 nwalker=1000  #number of walkers
-mantag=1000   #number of steps for antagonists
-mwalker=1000  #        ""      for walkers
-axis_x = 2*(mwalker)+1 #range of the axis for x and y
+mantag=100    #number of steps for antagonists
+mwalker=100   #        ""      for walkers
+axis_x = 2*(mantag)+1 #range of the axis for x and y
 board = np.zeros((axis_x,axis_x)) #initialize the board
-boardfill=math.floor(np.random.normal(loc=((2*(mwalker)+1)**2)/2,scale=mu)) #randomly samples Gaussian to determine number of receptors
-adest = np.array([[]])
-antagseal = np.array([[]])
-wsucceed = np.array([[]])
-wdest = np.array([[]])
+boardfill=math.floor(np.random.normal(loc=0.05*(axis_x**2),scale=mu)) #randomly samples Gaussian to determine number of receptors
+adest = np.array([[0,0]])
+antagseal = np.array([[0,0]])
+wsucceed = np.array([[0,0]])
+wdest = np.array([[0,0]])
 
 
 def simulation(nsteps, axis, recarray, origin=[[0,0]], group=10, prob=[0.25,0.25,0.25,0.25]):
@@ -33,7 +35,7 @@ def simulation(nsteps, axis, recarray, origin=[[0,0]], group=10, prob=[0.25,0.25
         path=np.array(origin)
         for i in range(bins):
             steps = rng.choice(choices, size=group, p=prob)  # array of currently generated steps
-            add_on = steps.cumsum(0) + path[-1,:]
+            add_on = steps.cumsum(0)+path[-1,:]
 
             for j in range(group):
                 check=Receptors.coordsToIndex(add_on[j],nsteps,axis)
@@ -43,7 +45,8 @@ def simulation(nsteps, axis, recarray, origin=[[0,0]], group=10, prob=[0.25,0.25
                     path = np.concatenate([path, fadd_on])
                     return(path, reccoord)
                 else:
-                    path = np.concatenate([path, add_on])
+                    continue
+            path = np.concatenate([path, add_on])
             
         reccoord = None  # receptor set to None if walker does not intercept any during simulation
         return(path, reccoord)
@@ -55,13 +58,27 @@ for i in range(nantag):
     history,reccoord = simulation(mantag,axis_x,recarray)
     if(reccoord is not None):
         recarray = Receptors.sealPortal(reccoord,mantag,axis_x,recarray)
-        antagseal[i,:].append(history[-1,:],axis=0)
+        antagseal = np.insert(antagseal,-1,history[-1:,:],axis=0)
     else:
-        adest.append(history[-1,:],axis=0)
+        adest = np.insert(adest,-1,history[-1,:],axis=0)
+
 #Now we let the walkers run the board
 for i in range(nwalker):
     history,reccoord = simulation(mwalker,axis_x,recarray)
     if(reccoord is not None):
-        wsucceed.append(history[-1,:],axis=0)
+        wsucceed=np.insert(wsucceed,-1,history[-1,:],axis=0)
     else:
-        wdest.append(history[-1,:],axis=0)
+        wdest=np.insert(wdest,-1,history[-1,:],axis=0)
+#Delete the initializing entry in the arrays
+antagseal=np.delete(antagseal,-1,0)
+adest=np.delete(adest,-1,0)
+wsucceed=np.delete(wsucceed,-1,0)
+wdest=np.delete(wdest,-1,0)
+
+fig, view = plt.subplots(2,2,figsize=(10,10))
+view[0,0].scatter(board[0,:],board[1,:])
+view[0,1].scatter(antagseal[:,0],antagseal[:,1])
+view[1,1].scatter(adest[:,0],adest[:,1])
+view[1,0].scatter(wsucceed[:,0],wsucceed[:,1])
+view[1,0].scatter(wdest[:,0],wdest[:,1])
+plt.show()
