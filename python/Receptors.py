@@ -36,14 +36,14 @@ def indexToCoords(n,s,d,rank=2):
     #This function converts list index to matrix like coordinate
     #The last step is a transformation of matrix coordinate into coordinate plane
     i=0
-    coord=np.zeros(rank)
+    matcoord=np.zeros(rank,dtype=np.int8)
     while(i<rank):
        q=d**i
-       coord[i] = ((n-(n%q))/q)%d
+       matcoord[i] = ((n-(n%q))/q)%d
        i+=1
     #Converts matrix index to coordinate plane
-    coord[0]=coord[0]-s
-    coord[1]=s-coord[1]
+    coord[0]=matcoord[0]-s
+    coord[1]=s-matcoord[1]
     return coord
 
 def coordsToIndex(coord,s,d,rank=2):
@@ -51,11 +51,12 @@ def coordsToIndex(coord,s,d,rank=2):
     #There is an intermediate transformation into a matrix like coordinate
     k=0
     n=0
+    matcoord=np.zeros(rank,dtype=np.int8)
     #Converts from coordinate plane to matrix index
-    coord[0]=coord[0]+s
-    coord[1]=s-coord[1]
+    matcoord[0]=coord[0]+s
+    matcoord[1]=s-coord[1]
     while(k<rank):
-        n+=(d**k)*coord[k]
+        n+=(d**k)*matcoord[k]
         k+=1
     return n
 
