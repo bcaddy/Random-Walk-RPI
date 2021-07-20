@@ -53,9 +53,31 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "typeinfo": "cpp",
-        "iomanip": "cpp"
+        "iomanip": "cpp",
+        "optional": "cpp"
     },
     "cSpell.words": [
-        "stoi"
-    ]
+        "Antag",
+        "Antags",
+        "adest",
+        "antagseal",
+        "ints",
+        "matcoord",
+        "mwalker",
+        "nsteps",
+        "nwalker",
+        "reccoord",
+        "recpt",
+        "stoi",
+        "wdest",
+        "wsucceed"
+    ],
+    "python.pythonPath": "/usr/local/bin/python3",
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/python/"
+    ],
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/python/"
+    ],
+    "python.languageServer": "Jedi"
 }

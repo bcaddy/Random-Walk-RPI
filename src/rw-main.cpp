@@ -10,12 +10,13 @@
 
 #include <iostream>
 #include <string>
-#include <chrono>
-#include <random>
 #include <omp.h>
+#include <vector>
+#include <limits.h>
 
 #include "utility.h"
 #include "PerfTimer.h"
+#include "walkerSim.h"
 
 using std::cout;
 using std::cin;
@@ -32,7 +33,7 @@ using std::endl;
 int main(int argc, char const *argv[])
 {
     // =========================================================================
-    // Settings and Setup
+    // Settings & Inputs
     // =========================================================================
     // Declare timers and start overall timer
     PerfTimer overallTimer("Overall Timer");
@@ -40,79 +41,61 @@ int main(int argc, char const *argv[])
     PerfTimer saveTimer("Saving Timer");
     overallTimer.startTimer();
 
-    // Setting for program
-    int const numWalkers = 1E6;  /// The total number of walkers to make
-    int const numSteps   = 1E4;  /// The number of steps that each walker should take
+    // Setting for simulation
+    size_t const numWalkers     = 1E3;                    /// The total number of walkers to make
+    size_t const numAntags      = 1E3;                    /// The total number of walker antagonists to make
+    size_t const numWalkerSteps = 1E4;                    /// The number of steps that each walker should take
+    size_t const numAntagSteps  = 1E4;                    /// The number of steps that each walker antagonist should take
+    size_t const axisLen        = 2 * numAntagSteps + 1;  /// The range of each axis. x and y both run from 0 to `axisLen`
+    double const mu             = 0.014862391;            // "Chemical Potential"
+
+    // Program settings
     std::string savePath;        /// The path to save the output to
-    int ompNumThreads;           /// Number of OMP threads to use
+    int ompNumThreads=1;           /// Number of OMP threads to use
 
-    // Gather inputs
+    // Declare and initialize simulation object
+    walkerSim sim(axisLen, mu);
+
+    // Declare the arrays for storing results
+    std::vector<std::vector<std::vector<int>>>
+        walkerPaths{numWalkers,
+                    std::vector<std::vector<int>>(numWalkerSteps+1,
+                    std::vector<int>(2,INT_MIN))},
+        antagPaths{numAntags,
+                   std::vector<std::vector<int>>(numAntagSteps+1,
+                   std::vector<int>(2,INT_MIN))};
+
+    // Gather inputs and suppress unused parameters warnings for argc and argv
     if (argc >= 2) savePath = argv[1];  /// The path to save the file to
-    if (argc == 3)
-    {
-        ompNumThreads = std::stoi(argv[2]);
-    }
-    else
-    {
-        ompNumThreads = omp_get_max_threads();
-    }
-    cout << "Running with " << ompNumThreads << " OpenMP threads" << endl;
-
-    // Initialize/Seed the random number generator
-    std::random_device rd;
-    std::default_random_engine eng(rd());
-    std::uniform_real_distribution<double> distr(0., 1);
-
-    // Declare and allocate the arrays of final positions
-    stdVector1D xPosFinal(numWalkers, 0.),
-                yPosFinal(numWalkers, 0.);
-
+    // if (argc == 3)
+    // {
+    //     ompNumThreads = std::stoi(argv[2]);
+    // }
+    // else
+    // {
+    //     ompNumThreads = omp_get_max_threads();
+    // }
+    // cout << "Running with " << ompNumThreads << " OpenMP threads" << endl;
+    cout << "numWalkers = " << numWalkers << ", numAntags = " << numAntags << endl;
+    cout << "numWalkerSteps = " << numWalkerSteps << ", numAntagSteps = " << numAntagSteps << endl;
+    cout << "Total steps = " << numWalkers * numWalkerSteps + numAntags * numAntagSteps << endl << endl;
     // =========================================================================
-    // End Settings and setup
+    // End Settings & Input
     // =========================================================================
 
     // =========================================================================
     // Random walk
     // =========================================================================
     walkerTimer.startTimer();
-    // Setup parallel region
-    #pragma omp parallel num_threads(ompNumThreads)
-    {
-        #pragma omp for
-        // Main loop. Loop through each walker
-        for (size_t i = 0; i < numWalkers; i++)
-        {
-            double xTemp=0., yTemp=0.;
 
-            // Loop through each step for each walker
-            for (size_t j = 0; j < numSteps; j++)
-            {
-                // generate a random double
-                double randNum = distr(eng);
+    // Initialize the grid of receptors
+    sim.seedReceptors();
 
-                // Choose which value to update
-                if (randNum < 0.25)
-                {
-                    xTemp += 1.;
-                }
-                else if (randNum < 0.5)
-                {
-                    xTemp -= 1.;
-                }
-                else if (randNum < 0.75)
-                {
-                    yTemp += 1.;
-                }
-                else
-                {
-                    yTemp -= 1.;
-                }
-            }
-        // Save the last position of the walker
-        xPosFinal[i] = xTemp;
-        yPosFinal[i] = yTemp;
-        }
-    }
+    // Run the antagonist walkers
+    sim.runWalkers(numAntags, numAntagSteps, antagPaths, ompNumThreads);
+
+    // Run the walkers
+    sim.runWalkers(numWalkers, numWalkerSteps, walkerPaths, ompNumThreads);
     walkerTimer.stopTimer();
     // =========================================================================
     // End random walk
@@ -123,7 +106,9 @@ int main(int argc, char const *argv[])
     // =========================================================================
     // Save the vectors to a csv file
     saveTimer.startTimer();
-    utils::saveState(xPosFinal, yPosFinal, savePath);
+    utils::save2DVector(sim.receptorGrid, savePath);
+    utils::save3DVector(walkerPaths, savePath, "/walkerPaths.csv");
+    utils::save3DVector(antagPaths, savePath, "antagonistPaths.csv");
     saveTimer.stopTimer();
 
     // Overall timer stop and return timing information
